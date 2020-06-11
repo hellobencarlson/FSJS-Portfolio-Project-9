@@ -1,0 +1,32 @@
+extends layout
+
+block content
+    h1 Update Course
+    h2= title
+
+    form(action="/courses" + course.id, method="post")
+
+      div
+        p
+          label(for="title") Title  
+          input(type="text", name="title" id="title" value=course.title)  
+      div
+        p
+          label(for="description") Description
+          input(type="description", name="description" id="description" value=course.description)
+      div
+        p
+          label(for="user") User
+          input(type="user", name="user" id="user" value=course.userId)
+      div  
+        
+      input(type="submit" value="Update") 
+    div
+      p 
+        a(href="../courses") Cancel
+    div
+      button 
+        a(href="/courses/" + course.id + "/delete") Delete Course
+   
+
+        

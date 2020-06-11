@@ -1,0 +1,23 @@
+extends layout
+
+block content
+  h1= title
+  div
+    table
+      thead
+        tr
+          th Title
+          th User
+          th Description
+
+      tbody
+      each course in courses
+        tr
+          td
+            //- a(href="/books/" + book.id)= book.title
+            =course.title
+          td
+            =course.userId
+          td
+            =course.description
+        
