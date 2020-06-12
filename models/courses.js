@@ -33,13 +33,13 @@ module.exports = (sequelize) => {
     }, { timestamps: false, sequelize });
 
     Course.associate = (models) => {
-        Course.belongsTo(models.User, { 
-           // targetKey: "lastName",
-            foreignKey: {
-                fieldName: "id",
-                allowNull: false
-            }
-        });
+        Course.belongsTo(models.User);
+        //     , { 
+        //     // foreignKey: {
+        //     //     fieldName: id"
+        //     //    // allowNull: false
+        //     // }
+        // });
     };
 
     return Course;
