@@ -5,7 +5,7 @@ const Sequelize = require('sequelize');
 module.exports = (sequelize) => {
     class User extends Sequelize.Model {}
     User.init({
-        exclude: ['password'],
+       // exclude: ['password'],
         id: {
             type: Sequelize.INTEGER,
             primaryKey: true,
@@ -26,7 +26,7 @@ module.exports = (sequelize) => {
         password: {
             type: Sequelize.STRING,
             allowNull: false
-        },
+        }
     },
     { // timestamps: false, 
         sequelize });

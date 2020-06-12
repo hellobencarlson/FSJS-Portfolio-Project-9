@@ -5,6 +5,7 @@ const auth = require('basic-auth');
 const { check, validationResult } = require('express-validator');
 const User = require('../models').User;
 const Course = require('../models').Course;
+let message = null;
 
 
 function asyncHandler(cb){
@@ -24,20 +25,21 @@ const authenticateUser = asyncHandler(async (req, res, next) => {
   console.log(credentials);
 
   if(credentials) {
-    
-    const user = await User.findOne({ where: { emailAddress: credentials.name } });
-    console.log(user.name);
-    if (user) {
-      const authenticated = bcryptjs
-        .compareSync(credentials.pass, user.password);
+    const user = await User.findAll({ where: {
+      emailAddress: credentials.name
+    }})
 
-      if (authenticated) {
-        req.currentUser = user;
+      if (user) {
+        const authenticated = bcryptjs
+            .compareSync(credentials.pass, user[0].dataValues.password);
+        
+          if (authenticated) {
+            req.currentUser = user;
+          } else {
+            message = "Authentication failed for username: ${user.username}";
+          }
       } else {
-        message = "Authentication failed for username: ${user.username}";
-      }
-    } else {
-      "User not found for username: ${credentials.name}";
+      message = "User not found for username: ${credentials.name}";
     }
   } else {
     message = "Authentication header not found";
@@ -45,7 +47,6 @@ const authenticateUser = asyncHandler(async (req, res, next) => {
 
   if (message) {
     console.warn(message);
-
     res.status(401).json({ message: "Access Denied" });
   } else {
   next();
@@ -57,14 +58,11 @@ const authenticateUser = asyncHandler(async (req, res, next) => {
 router.get('/users', authenticateUser, 
 asyncHandler(async (req, res) => {
   //const user = await Course.findByPk(req.params.id)
-  console.log(req.body);
-  // const user = req.currentUser;
-  //console.log(user);
-  // res.json({
-  //   name: user.name,
-  //   username: user.username,
-  // });
-  // return current user
+  console.log(req.currentUser); 
+  res.json({
+     firstName: req.currentUser[0].dataValues.firstName,
+     lastName: req.currentUser[0].dataValues.lastName
+   });
 }));
 
 /* POST users */
@@ -143,8 +141,12 @@ check('description')
    res.status(400).json({ errors: errorMessages });
  } else {
   let course;
-  course = await Course.create(req.body);
-  courses.push(course);
+  console.log(req.currentUser[0].dataValues.id);
+  course = await Course.create({
+    userId: req.currentUser[0].dataValues.id,
+    title: req.body.title,
+    description: req.body.description
+  });
   res.location("/couses/" + course.id);
   res.status(201).end();
  }
@@ -174,9 +176,10 @@ check('description')
 
 /* Delete a course- update */
 router.delete('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
-  const book = await Book.findByPk(req.params.id);
-  await book.destroy();
+  const course = await Course.findByPk(req.params.id);
+  await course.destroy();
 }));
 
 
 module.exports = router;
+
