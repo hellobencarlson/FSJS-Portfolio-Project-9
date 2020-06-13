@@ -10,10 +10,6 @@ module.exports = (sequelize) => {
             primaryKey: true,
             autoIncrement: true
         },
-        userId: {
-            type: Sequelize.INTEGER,
-            allowNull: false,
-        },
         title: {
             type: Sequelize.STRING,
             allowNull: false
@@ -30,16 +26,15 @@ module.exports = (sequelize) => {
             type: Sequelize.STRING,
             allowNull: true
         }
-    }, { timestamps: false, sequelize });
+    }, { sequelize });
 
     Course.associate = (models) => {
-        Course.belongsTo(models.User);
-        //     , { 
-        //     // foreignKey: {
-        //     //     fieldName: id"
-        //     //    // allowNull: false
-        //     // }
-        // });
+        Course.belongsTo(models.User, { 
+             foreignKey: {
+                 fieldName: "userId",
+                 // allowNull: false
+              }
+        });
     };
 
     return Course;

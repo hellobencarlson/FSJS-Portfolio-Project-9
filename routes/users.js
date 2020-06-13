@@ -28,8 +28,8 @@ const authenticateUser = asyncHandler(async (req, res, next) => {
     const user = await User.findAll({ where: {
       emailAddress: credentials.name
     }})
-
-      if (user) {
+    console.log(user[0].dataValues);
+      if (user[0] != undefined) {
         const authenticated = bcryptjs
             .compareSync(credentials.pass, user[0].dataValues.password);
         
@@ -60,8 +60,8 @@ asyncHandler(async (req, res) => {
   //const user = await Course.findByPk(req.params.id)
   console.log(req.currentUser); 
   res.json({
-     firstName: req.currentUser[0].dataValues.firstName,
-     lastName: req.currentUser[0].dataValues.lastName
+    firstName: req.currentUser[0].dataValues.firstName,
+    lastName: req.currentUser[0].dataValues.lastName
    });
 }));
 
@@ -89,21 +89,11 @@ router.post('/users', [
     const errorMessages = errors.array().map(error => error.msg);
     res.status(400).json({ errors: errorMessages });
   } else {
-   // console.log(req.body);
     let user;
-    try {
-        user = await User.create({
-          firstName: req.body.firstName,
-          lastName: req.body.lastName,
-          emailAddress: req.body.emailAddress,
-          password: req.body.password
-        });
-        res.location("/");
-        res.status(201).end();
-      } catch (error) {
-        throw error;
-      }
-     // user.password = bcryptjs.hashSync(user.password);
+    req.body.password = bcryptjs.hashSync(req.body.password);
+    user = await User.create(req.body);
+    res.location("/");
+    res.status(201).end();
 }
 }));
 
@@ -141,19 +131,9 @@ check('description')
    res.status(400).json({ errors: errorMessages });
  } else {
   let newCourse;
-  console.log(req.currentUser[0].dataValues.id);
-  try {
-    newCourse = await Course.create({
-      userId: req.currentUser[0].dataValues.id,
-      title: req.body.title,
-      description: req.body.description
-    });
+    newCourse = await Course.create(req.body);
     res.location("/courses/" + newCourse.id);
-    res.status(201).end()
-
-  } catch(error) {
-   throw error;
- }
+    res.status(201).end();
 }
 }));
 
@@ -182,6 +162,7 @@ check('description')
 /* Delete a course- update */
 router.delete('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
   const course = await Course.findByPk(req.params.id);
+  console.log(course);
   await course.destroy();
 }));
 
