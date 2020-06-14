@@ -27,8 +27,7 @@ const authenticateUser = asyncHandler(async (req, res, next) => {
   if(credentials) {
     const user = await User.findAll({ where: {
       emailAddress: credentials.name
-    }})
-    // console.log(user[0].dataValues);
+    }});
       if (user[0] != undefined) {
         const authenticated = bcryptjs
             .compareSync(credentials.pass, user[0].dataValues.password);
@@ -84,12 +83,18 @@ const validateCorrectUser = asyncHandler(async (req, res, next) => {
 /* GET users */
 router.get('/users', authenticateUser, 
 asyncHandler(async (req, res) => {
-  //const user = await Course.findByPk(req.params.id)
-  console.log(req.currentUser); 
-  res.json({
-    firstName: req.currentUser[0].dataValues.firstName,
-    lastName: req.currentUser[0].dataValues.lastName
-   });
+
+  const userNow = req.currentUser[0].dataValues.id;
+  
+  const user = await User.findAll({
+    where: { 
+      id: userNow
+    },
+    attributes: { 
+      exclude: ['createdAt', 'updatedAt', 'password'] 
+    }
+  });
+  res.json({ user });
 }));
 
 /* POST users */
@@ -116,11 +121,6 @@ router.post('/users', [
     const errorMessages = errors.array().map(error => error.msg);
     res.status(400).json({ errors: errorMessages });
   } else {
-    // const newUser = req.body;
-    // const checkUniqueEmail = await User.findAll({ where: {
-    //   emailAddress: newUser.emailAddress
-    // }});
-    // console.log(checkUniqueEmail);
     let user;
     req.body.password = bcryptjs.hashSync(req.body.password);
     user = await User.create(req.body);
@@ -131,14 +131,24 @@ router.post('/users', [
 
 /* GET courses */
 router.get('/courses', asyncHandler(async (req, res, next) => {
-   const courses = await Course.findAll();
+   const courses = await Course.findAll({
+      attributes: { exclude: ['createdAt', 'updatedAt'] }
+   });
   res.json({ courses });
 }));
 
 /* GET a course */
 router.get('/courses/:id', asyncHandler(async (req, res) => {
+  const request = req.params.id
   try {
-    const course = await Course.findByPk(req.params.id);
+    const course = await Course.findAll({
+      where: { 
+        id: request 
+      },
+      attributes: { 
+        exclude: ['createdAt', 'updatedAt'] 
+      }
+    });
     res.json({ course });
   } catch(error) {
     throw error;
