@@ -22,13 +22,13 @@ function asyncHandler(cb){
 // authenticate
 const authenticateUser = asyncHandler(async (req, res, next) => {
   const credentials = auth(req);
-  console.log(credentials);
+  // console.log(credentials);
 
   if(credentials) {
     const user = await User.findAll({ where: {
       emailAddress: credentials.name
     }})
-    console.log(user[0].dataValues);
+    // console.log(user[0].dataValues);
       if (user[0] != undefined) {
         const authenticated = bcryptjs
             .compareSync(credentials.pass, user[0].dataValues.password);
@@ -52,6 +52,33 @@ const authenticateUser = asyncHandler(async (req, res, next) => {
   next();
   }
 });
+
+// validate if user is course owner 
+const validateCorrectUser = asyncHandler(async (req, res, next) => {
+      // which course is it from the database?
+      const course = await Course.findByPk(req.params.id);
+        // what is its userId
+        const id = course.dataValues.userId;
+        console.log(id);
+      
+        const credentials = auth(req);  
+        // which user is it from the credentials?
+        const user = await User.findAll({ where: {
+            emailAddress: credentials.name
+          }})
+          // what is the user's id
+          const userId = user[0].dataValues.id;
+          console.log(userId);
+          // check for match
+          if (id == userId) {
+            console.log('match');
+            next();
+          } else { 
+            console.log('not match');
+            res.status(403).json({ message: "Access Denied" }).end();
+          }
+  });
+
 
 
 /* GET users */
@@ -89,6 +116,11 @@ router.post('/users', [
     const errorMessages = errors.array().map(error => error.msg);
     res.status(400).json({ errors: errorMessages });
   } else {
+    // const newUser = req.body;
+    // const checkUniqueEmail = await User.findAll({ where: {
+    //   emailAddress: newUser.emailAddress
+    // }});
+    // console.log(checkUniqueEmail);
     let user;
     req.body.password = bcryptjs.hashSync(req.body.password);
     user = await User.create(req.body);
@@ -100,20 +132,18 @@ router.post('/users', [
 /* GET courses */
 router.get('/courses', asyncHandler(async (req, res, next) => {
    const courses = await Course.findAll();
-//   console.log(courses);
-  res.render('index', { courses, title: 'Course List' });
+  res.json({ courses });
 }));
 
 /* GET a course */
 router.get('/courses/:id', asyncHandler(async (req, res) => {
-  const course = await Course.findByPk(req.params.id)
-  if (course) {
-    res.render("update-course", { course, title: course.title });
-  } else {
-    res.render('error');
+  try {
+    const course = await Course.findByPk(req.params.id);
+    res.json({ course });
+  } catch(error) {
+    throw error;
   }
-  
-}));
+  }));
 
 /* POST course- create */
 router.post('/courses', authenticateUser, [
@@ -138,7 +168,7 @@ check('description')
 }));
 
  /* PUT a course- update */
-router.put('/courses/:id', authenticateUser, [
+router.put('/courses/:id', authenticateUser, validateCorrectUser, [
   check('title')
   .exists()
   .withMessage("Please add a title"),
@@ -160,10 +190,12 @@ check('description')
 }));
 
 /* Delete a course- update */
-router.delete('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
+router.delete('/courses/:id', authenticateUser, validateCorrectUser, asyncHandler(async (req, res) => {
+
   const course = await Course.findByPk(req.params.id);
-  console.log(course);
-  await course.destroy();
+  course.destroy();
+  res.status(200).end();
+
 }));
 
 
