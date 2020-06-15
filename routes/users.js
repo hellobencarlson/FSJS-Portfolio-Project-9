@@ -22,7 +22,6 @@ function asyncHandler(cb){
 // authenticate
 const authenticateUser = asyncHandler(async (req, res, next) => {
   const credentials = auth(req);
-  // console.log(credentials);
 
   if(credentials) {
     const user = await User.findAll({ where: {
@@ -56,6 +55,7 @@ const authenticateUser = asyncHandler(async (req, res, next) => {
 const validateCorrectUser = asyncHandler(async (req, res, next) => {
       // which course is it from the database?
       const course = await Course.findByPk(req.params.id);
+        console.log(course);
         // what is its userId
         const id = course.dataValues.userId;
         console.log(id);
@@ -84,8 +84,10 @@ const validateCorrectUser = asyncHandler(async (req, res, next) => {
 router.get('/users', authenticateUser, 
 asyncHandler(async (req, res) => {
 
+  // get current user's id
   const userNow = req.currentUser[0].dataValues.id;
   
+  // find user in database and return
   const user = await User.findAll({
     where: { 
       id: userNow
@@ -110,6 +112,7 @@ router.post('/users', [
     .withMessage("Please add your email")
     .isEmail()
     .withMessage("Please use a valid email"),
+    // sequelize error also comes up if email not unique
   check('password')
     .exists({ checkNull: true, checkFalsy: true })
     .withMessage("Please add a password")
@@ -122,7 +125,9 @@ router.post('/users', [
     res.status(400).json({ errors: errorMessages });
   } else {
     let user;
+    // hash the password
     req.body.password = bcryptjs.hashSync(req.body.password);
+    // create user
     user = await User.create(req.body);
     res.location("/");
     res.status(201).end();
@@ -139,10 +144,12 @@ router.get('/courses', asyncHandler(async (req, res, next) => {
 
 /* GET a course */
 router.get('/courses/:id', asyncHandler(async (req, res) => {
+  // save the id from the request
   const request = req.params.id
   try {
     const course = await Course.findAll({
       where: { 
+        // find the id in Courses that matches request id
         id: request 
       },
       attributes: { 
@@ -171,6 +178,7 @@ check('description')
    res.status(400).json({ errors: errorMessages });
  } else {
   let newCourse;
+    // create new course with request info
     newCourse = await Course.create(req.body);
     res.location("/courses/" + newCourse.id);
     res.status(201).end();
@@ -193,7 +201,9 @@ check('description')
       const errorMessages = errors.array().map(error => error.msg);
       res.status(400).json({ errors: errorMessages });
     } else {
+      // fomd course with id that matches
       const course = await Course.findByPk(req.params.id);
+      // update course
       await course.update(req.body);
       res.status(204).end();
     }
@@ -201,8 +211,9 @@ check('description')
 
 /* Delete a course- update */
 router.delete('/courses/:id', authenticateUser, validateCorrectUser, asyncHandler(async (req, res) => {
-
+  // find course with matching id
   const course = await Course.findByPk(req.params.id);
+  // delete it
   course.destroy();
   res.status(200).end();
 

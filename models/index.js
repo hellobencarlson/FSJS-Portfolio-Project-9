@@ -42,20 +42,6 @@ module.exports = db;
     await sequelize.authenticate();
     console.log("Successful connection to the database");
 
-    // sync models
-    // console.log('sync models with database');
-    // await sequelize.sync({ force: true });
-
-    // retrieve courses
-    // const users = await User.findAll({
-    //   include: [
-    //     {
-    //       model: Course,
-    //     },
-    //   ],
-    // });
-
-
   } catch (error) {
     console.error("Error connecting to database", error)
   }

@@ -5,7 +5,6 @@ const Sequelize = require('sequelize');
 module.exports = (sequelize) => {
     class User extends Sequelize.Model {}
     User.init({
-       // exclude: ['password'],
         id: {
             type: Sequelize.INTEGER,
             primaryKey: true,
@@ -28,8 +27,7 @@ module.exports = (sequelize) => {
             allowNull: false
         }
     },
-    { // timestamps: false, 
-        sequelize });
+    { sequelize });
     
     User.associate = (models) => {
         User.hasMany(models.Course, { 
