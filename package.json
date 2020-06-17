@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "start": "node ./bin/www",
+    "seed": "cross-env DB_ENABLE_LOGGING=true node './seed'"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
